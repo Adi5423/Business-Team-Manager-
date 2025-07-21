@@ -68,6 +68,12 @@ Visit [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in your browser.
 - Media uploads and static files are stored locally (see `.gitignore`).
 - For production, configure proper static/media hosting and security settings.
 
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+Open to all contributors! For contributions or questions, contact: adii54ti23@gmail.com
+
 ---
 
 Enjoy your modern business management dashboard! 
