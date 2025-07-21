@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+  <h1 class="text-2xl font-bold mb-6">
+    {% if editing_other %}
+      Editing Profile: {{ profile.user.username }}
+    {% else %}
+      Welcome, {{ profile.user.username }}
+    {% endif %}
+  </h1>
+  <form method="POST" class="bg-white rounded shadow p-6 max-w-md mx-auto space-y-4">
+    {% csrf_token %}
+    <div>
+      <label class="block font-semibold">Role:</label>
+      <span class="text-gray-700">{{ profile.role }}</span>
+    </div>
+    <div>
+      <label class="block font-semibold">Progress (%):</label>
+      <input type="number" name="progress" value="{{ profile.progress }}" min="0" max="100" class="border rounded px-3 py-2 w-full" {% if not editing_other and profile.user != user %}readonly{% endif %} />
+    </div>
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Save</button>
+  </form>
+  {% if not editing_other and profile.user == user and profile.role == 'employee' %}
+    <div class="mt-8">
+      <h2 class="text-xl font-bold mb-4">My Tasks</h2>
+      <ul>
+        {% for task in profile.tasks.all %}
+          <li class="mb-2 p-2 border rounded flex justify-between items-center">
+            <span>{{ task.title }} ({{ task.status }})</span>
+            <a href="{% url 'report-task' task.id %}" class="text-orange-600 underline ml-4">Report/Mark</a>
+          </li>
+        {% empty %}
+          <li>No tasks assigned.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+  <div class="flex justify-between mt-6 max-w-md mx-auto">
+    <a href="{% url 'employee-list' %}" class="text-blue-600 underline">Back to Team</a>
+    <a href="{% url 'logout' %}" class="text-red-600 underline">Logout</a>
+  </div>
+{% endblock %}

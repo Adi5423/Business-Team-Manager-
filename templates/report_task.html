@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Report/Mark Task{% endblock %}
+{% block content %}
+  <h1 class="text-2xl font-bold mb-6">Report/Mark Task: {{ task.title }}</h1>
+  <form method="POST" class="bg-white rounded shadow p-6 max-w-md mx-auto space-y-4">
+    {% csrf_token %}
+    <div>
+      <label class="block font-semibold">Status:</label>
+      <select name="status" class="border rounded px-3 py-2 w-full">
+        <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>Pending</option>
+        <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+        <option value="done" {% if task.status == 'done' %}selected{% endif %}>Done</option>
+      </select>
+    </div>
+    <div>
+      <label class="block font-semibold">Progress (%):</label>
+      <input type="number" name="progress" value="{{ task.progress }}" min="0" max="100" class="border rounded px-3 py-2 w-full" />
+    </div>
+    <div>
+      <label class="block font-semibold">Report/Comments:</label>
+      <textarea name="report" class="border rounded px-3 py-2 w-full">{{ task.review }}</textarea>
+    </div>
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Save</button>
+  </form>
+  <div class="flex justify-between mt-6 max-w-md mx-auto">
+    <a href="{% url 'my-profile' %}" class="text-blue-600 underline">Back to My Profile</a>
+    <a href="{% url 'employee-list' %}" class="text-blue-600 underline">Back to Team</a>
+  </div>
+{% endblock %} 

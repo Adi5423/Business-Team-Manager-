@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Assign Task{% endblock %}
+{% block content %}
+  <h1 class="text-2xl font-bold mb-6">Assign Task</h1>
+  <form method="POST" enctype="multipart/form-data" class="bg-white rounded shadow p-6 max-w-lg mx-auto space-y-4 glass">
+    {% csrf_token %}
+    <div>
+      <label class="block font-semibold mb-1">Title:</label>
+      <input name="title" required class="border rounded px-3 py-2 w-full" />
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">Description:</label>
+      <textarea name="description" class="border rounded px-3 py-2 w-full"></textarea>
+    </div>
+    {% if employees %}
+      <div>
+        <label class="block font-semibold mb-1">Assign to:</label>
+        <div id="section-buttons" class="flex flex-wrap space-x-2 mb-2">
+          {% if user.employeeprofile.role == 'head' %}
+            <button type="button" class="section-btn bg-gradient-to-r from-blue-400 to-blue-600 text-white px-3 py-1 rounded mb-2" data-section="employee">Employees</button>
+            <button type="button" class="section-btn bg-gradient-to-r from-purple-400 to-purple-600 text-white px-3 py-1 rounded mb-2" data-section="manager">Managers</button>
+          {% elif user.employeeprofile.role == 'manager' %}
+            <button type="button" class="section-btn bg-gradient-to-r from-blue-400 to-blue-600 text-white px-3 py-1 rounded mb-2" data-section="employee">Employees</button>
+          {% endif %}
+        </div>
+        <div id="user-pills" class="flex overflow-x-auto space-x-2 py-2 mb-2 min-h-[48px] w-full"></div>
+        <div id="selected-pills" class="flex overflow-x-auto space-x-2 py-2 mb-2 min-h-[48px] w-full"></div>
+        <input type="hidden" name="assigned_to" id="assigned_to" />
+      </div>
+      <style>
+        .glass-pill {
+          background: rgba(255,255,255,0.25);
+          box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.10);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          border-radius: 9999px;
+          border: 1px solid rgba(255,255,255,0.18);
+          transition: background 0.2s, box-shadow 0.2s;
+        }
+        .glass-pill.selected {
+          background: rgba(59,130,246,0.25); /* blue-500 glassy */
+          box-shadow: 0 4px 24px 0 rgba(59,130,246,0.10);
+          border: 1px solid rgba(59,130,246,0.18);
+        }
+      </style>
+      <script>
+        const allUsers = {
+          employee: [
+            {% for emp in employees %}{% if emp.role == 'employee' %}{ id: {{ emp.id }}, name: '{{ emp.user.username }}', role: 'employee' },{% endif %}{% endfor %}
+          ],
+          manager: [
+            {% for emp in employees %}{% if emp.role == 'manager' %}{ id: {{ emp.id }}, name: '{{ emp.user.username }}', role: 'manager' },{% endif %}{% endfor %}
+          ],
+        };
+        let selected = [];
+        let currentSection = Object.keys(allUsers)[0];
+        // Preselect user if 'to' query param is present
+        function getQueryParam(name) {
+          const url = new URL(window.location.href);
+          return url.searchParams.get(name);
+        }
+        function preselectUser() {
+          const toId = getQueryParam('to');
+          if (toId) {
+            for (const section in allUsers) {
+              const user = allUsers[section].find(u => u.id == toId);
+              if (user && !selected.find(u => u.id == user.id)) {
+                selected.push(user);
+                currentSection = section;
+                break;
+              }
+            }
+          }
+        }
+        function renderUserPills() {
+          const container = document.getElementById('user-pills');
+          container.innerHTML = '';
+          allUsers[currentSection].forEach(user => {
+            if (!selected.find(u => u.id === user.id)) {
+              const pill = document.createElement('div');
+              pill.className = 'glass-pill flex items-center px-3 py-1 shadow cursor-pointer transition hover:scale-105 mb-2';
+              pill.innerHTML = `<span class='truncate max-w-[100px]'>${user.name}</span><button type=\"button\" class=\"ml-2 text-lg font-bold\" onclick=\"addUser(${user.id})\">+</button>`;
+              container.appendChild(pill);
+            }
+          });
+        }
+        function renderSelectedPills() {
+          const container = document.getElementById('selected-pills');
+          container.innerHTML = '';
+          selected.forEach(user => {
+            const pill = document.createElement('div');
+            pill.className = 'glass-pill selected flex items-center px-3 py-1 shadow cursor-pointer transition hover:scale-105 mb-2';
+            pill.innerHTML = `<span class='truncate max-w-[100px]'>${user.name}</span><button type=\"button\" class=\"ml-2 text-lg font-bold\" onclick=\"removeUser(${user.id})\">&times;</button>`;
+            container.appendChild(pill);
+          });
+          document.getElementById('assigned_to').value = selected.map(u => u.id).join(',');
+        }
+        function addUser(id) {
+          const user = allUsers[currentSection].find(u => u.id === id);
+          if (user && !selected.find(u => u.id === id)) {
+            selected.push(user);
+            renderUserPills();
+            renderSelectedPills();
+          }
+        }
+        function removeUser(id) {
+          selected = selected.filter(u => u.id !== id);
+          renderUserPills();
+          renderSelectedPills();
+        }
+        document.querySelectorAll('.section-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            currentSection = this.getAttribute('data-section');
+            renderUserPills();
+          });
+        });
+        // Initial render
+        preselectUser();
+        renderUserPills();
+        renderSelectedPills();
+      </script>
+    {% endif %}
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Assign</button>
+  </form>
+{% endblock %}
