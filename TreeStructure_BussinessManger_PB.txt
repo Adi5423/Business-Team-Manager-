@@ -1,0 +1,33 @@
+BussinessManger_PB/
+├── business_manager/
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── department/
+│   ├── migrations/
+│   │   ├── 0001_initial.py
+│   │   ├── 0002_remove_employeeprofile_last_day_progress_and_more.py
+│   │   ├── 0003_task.py
+│   │   ├── 0004_alter_employeeprofile_progress.py
+│   │   └── __init__.py
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── tests.py
+│   └── views.py
+├── templates/
+│   ├── assign_task.html
+│   ├── base.html
+│   ├── employee_list.html
+│   ├── login.html
+│   ├── profile.html
+│   └── report_task.html
+├── .TreeIgnore
+├── .gitignore
+├── LICENSE
+├── README.md
+├── db.sqlite3
+└── manage.py
