@@ -10,7 +10,8 @@ from department.views import (
     assign_task,
     edit_profile,
     report_task,
-    custom_logout,  # import custom logout from department
+    custom_logout,
+    get_user_tasks,
 )
 
 urlpatterns = [
@@ -20,14 +21,16 @@ urlpatterns = [
     path('login/', LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', custom_logout, name='logout'),
 
-    # App routes
+    # App
     path('', employee_list, name='employee-list'),
     path('profile/', my_profile, name='my-profile'),
     path('assign/', assign_task, name='assign-task'),
     path('profile/<int:user_id>/edit/', edit_profile, name='edit-profile'),
     path('task/<int:task_id>/report/', report_task, name='report-task'),
+
+    # JSON API
+    path('tasks/<int:user_id>/json/', get_user_tasks, name='get-user-tasks'),
 ]
 
-# Serve media in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

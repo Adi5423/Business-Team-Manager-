@@ -6,196 +6,168 @@
 
     <!-- Tabs -->
     <div class="mb-6 overflow-x-auto">
-      <ul class="flex border-b min-w-max whitespace-nowrap glass">
+      <ul class="flex border-b min-w-max whitespace-nowrap glass" id="tabs">
         <li class="-mb-px mr-1">
-          <a href="#all" class="bg-white inline-block border-l border-t border-r rounded-t py-2 px-4 font-semibold" onclick="showTab('all')">All</a>
+          <a href="#all" data-tab="all" class="tab-link bg-white inline-block border-l border-t border-r rounded-t py-2 px-4 font-semibold">All</a>
         </li>
         <li class="-mb-px mr-1">
-          <a href="#employee" class="bg-white inline-block border-l border-t border-r rounded-t py-2 px-4 font-semibold" onclick="showTab('employee')">Employees</a>
+          <a href="#employee" data-tab="employee" class="tab-link bg-white inline-block border-l border-t border-r rounded-t py-2 px-4 font-semibold">Employees</a>
         </li>
         <li class="-mb-px mr-1">
-          <a href="#manager" class="bg-white inline-block border-l border-t border-r rounded-t py-2 px-4 font-semibold" onclick="showTab('manager')">Managers</a>
+          <a href="#manager" data-tab="manager" class="tab-link bg-white inline-block border-l border-t border-r rounded-t py-2 px-4 font-semibold">Managers</a>
         </li>
         <li class="-mb-px mr-1">
-          <a href="#head" class="bg-white inline-block border-l border-t border-r rounded-t py-2 px-4 font-semibold" onclick="showTab('head')">Heads</a>
+          <a href="#head" data-tab="head" class="tab-link bg-white inline-block border-l border-t border-r rounded-t py-2 px-4 font-semibold">Heads</a>
         </li>
       </ul>
     </div>
 
-    <!-- Tab Contents -->
-    <div id="tab-all">
-      <h2 class="text-xl font-bold mt-6">All People</h2>
-      <ul class="space-y-4">
-        {% for profile in profiles %}
-          <li class="glass bg-white/40 rounded shadow p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-            <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 w-full">
-              <span class="font-semibold text-lg">{{ profile.user.username }}</span>
-              <span class="text-gray-500">- {{ profile.role }}</span>
+    <!-- Single List; we filter with JS -->
+    <ul id="people-list" class="space-y-4">
+      {% for profile in profiles %}
+        <li data-role="{{ profile.role }}" class="person-card glass bg-white/40 rounded shadow p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+          <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 w-full">
+            <span class="font-semibold text-lg">{{ profile.user.username }}</span>
+            <span class="text-gray-500">- {{ profile.role }}</span>
+          </div>
+          <div class="flex justify-center items-center w-full sm:w-auto mt-2 sm:mt-0">
+            <div class="relative w-16 h-16">
+              <svg class="w-16 h-16" viewBox="0 0 36 36">
+                <circle class="text-gray-200" stroke-width="4" stroke="currentColor" fill="none" cx="18" cy="18" r="16" />
+                <circle class="text-blue-500" stroke-width="4" stroke-linecap="round" stroke="currentColor" fill="none" cx="18" cy="18" r="16"
+                  stroke-dasharray="100, 100" stroke-dashoffset="{{ profile.progress_offset }}" />
+              </svg>
+              <span class="absolute inset-0 flex items-center justify-center text-lg font-bold text-blue-700">{{ profile.progress|default:0 }}%</span>
             </div>
-            <div class="flex justify-center items-center w-full sm:w-auto mt-2 sm:mt-0">
-              <div class="relative w-16 h-16">
-                <svg class="w-16 h-16" viewBox="0 0 36 36">
-                  <circle class="text-gray-200" stroke-width="4" stroke="currentColor" fill="none" cx="18" cy="18" r="16" />
-                  <circle class="text-blue-500" stroke-width="4" stroke-linecap="round" stroke="currentColor" fill="none" cx="18" cy="18" r="16"
-                    stroke-dasharray="100, 100" stroke-dashoffset="{{ profile.progress_offset }}" style="transition: stroke-dashoffset 0.5s;" />
-                </svg>
-                <span class="absolute inset-0 flex items-center justify-center text-lg font-bold text-blue-700">{{ profile.progress|default:0 }}%</span>
-              </div>
-            </div>
-            <div class="flex flex-col sm:flex-row mt-2 sm:mt-0 space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto justify-center">
-              {% if user.is_authenticated %}
-                {% if profile.user != user %}
-                  {% if user.employeeprofile.role == 'head' or user.employeeprofile.role == 'manager' or user.employeeprofile.role == 'admin' %}
-                    <a href="{% url 'edit-profile' profile.user.id %}" class="text-blue-600 underline">Edit</a>
-                    <a href="{% url 'assign-task' %}?to={{ profile.id }}" class="text-green-600 underline">Assign Task</a>
-                  {% endif %}
+          </div>
+          <div class="flex flex-col sm:flex-row mt-2 sm:mt-0 space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto justify-center">
+            {% if user.is_authenticated %}
+              {% if profile.user != user %}
+                {% if user.employeeprofile.role == 'head' or user.employeeprofile.role == 'manager' or user.employeeprofile.role == 'admin' %}
+                  <a href="{% url 'edit-profile' profile.user.id %}" class="text-blue-600 underline">Edit</a>
+                  <a href="{% url 'assign-task' %}?to={{ profile.id }}" class="text-green-600 underline">Assign Task</a>
                 {% endif %}
               {% endif %}
-              {% if profile.user == user %}
-                <a href="{% url 'my-profile' %}" class="text-blue-600 underline ml-0 sm:ml-4">View My Profile</a>
-              {% endif %}
-            </div>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
+            {% endif %}
+            {% if profile.user == user %}
+              <a href="{% url 'my-profile' %}" class="text-blue-600 underline">View My Profile</a>
+              <!-- Per-card robo button (only on your own card) -->
+              <button
+                type="button"
+                onclick="openTasksSheet({{ user.employeeprofile.id }})"
+                class="bg-purple-600 text-white p-2 rounded-full ml-2 hover:bg-purple-700 transition"
+                title="Assigned Tasks">
+                🤖
+              </button>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
 
-    <div id="tab-employee" style="display:none;">
-      <h2 class="text-xl font-bold mt-6">Employees</h2>
-      <ul class="space-y-4">
-        {% for profile in profiles %}
-          {% if profile.role == 'employee' %}
-            <li class="glass bg-white/40 rounded shadow p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-              <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 w-full">
-                <span class="font-semibold text-lg">{{ profile.user.username }}</span>
-                <span class="text-gray-500">- {{ profile.role }}</span>
-              </div>
-              <div class="flex justify-center items-center w-full sm:w-auto mt-2 sm:mt-0">
-                <div class="relative w-16 h-16">
-                  <svg class="w-16 h-16" viewBox="0 0 36 36">
-                    <circle class="text-gray-200" stroke-width="4" stroke="currentColor" fill="none" cx="18" cy="18" r="16" />
-                    <circle class="text-blue-500" stroke-width="4" stroke-linecap="round" stroke="currentColor" fill="none" cx="18" cy="18" r="16"
-                      stroke-dasharray="100, 100" stroke-dashoffset="{{ profile.progress_offset }}" style="transition: stroke-dashoffset 0.5s;" />
-                  </svg>
-                  <span class="absolute inset-0 flex items-center justify-center text-lg font-bold text-blue-700">{{ profile.progress|default:0 }}%</span>
-                </div>
-              </div>
-              <div class="flex flex-col sm:flex-row mt-2 sm:mt-0 space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto justify-center">
-                {% if user.is_authenticated %}
-                  {% if profile.user != user %}
-                    {% if user.employeeprofile.role == 'head' or user.employeeprofile.role == 'manager' or user.employeeprofile.role == 'admin' %}
-                      <a href="{% url 'edit-profile' profile.user.id %}" class="text-blue-600 underline">Edit</a>
-                      <a href="{% url 'assign-task' %}?to={{ profile.id }}" class="text-green-600 underline">Assign Task</a>
-                    {% endif %}
-                  {% endif %}
-                {% endif %}
-                {% if profile.user == user %}
-                  <a href="{% url 'my-profile' %}" class="text-blue-600 underline ml-0 sm:ml-4">View My Profile</a>
-                  <a href="{% url 'report-task' 0 %}" class="text-orange-600 underline ml-0 sm:ml-4">Report/Mark Task</a>
-                {% endif %}
-              </div>
-            </li>
-          {% endif %}
-        {% endfor %}
-      </ul>
-    </div>
+  <!-- Floating bottom-right robo button (works anywhere on the page) -->
+  {% if user.is_authenticated and user.employeeprofile %}
+    <button
+      type="button"
+      onclick="openTasksSheet({{ user.employeeprofile.id }})"
+      class="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-purple-600 hover:bg-purple-700 text-white shadow-lg flex items-center justify-center text-2xl"
+      title="Assigned Tasks">
+      🤖
+    </button>
+  {% endif %}
 
-    <div id="tab-manager" style="display:none;">
-      <h2 class="text-xl font-bold mt-6">Managers</h2>
-      <ul class="space-y-4">
-        {% for profile in profiles %}
-          {% if profile.role == 'manager' %}
-            <li class="glass bg-white/40 rounded shadow p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-              <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 w-full">
-                <span class="font-semibold text-lg">{{ profile.user.username }}</span>
-                <span class="text-gray-500">- {{ profile.role }}</span>
-              </div>
-              <div class="flex justify-center items-center w-full sm:w-auto mt-2 sm:mt-0">
-                <div class="relative w-16 h-16">
-                  <svg class="w-16 h-16" viewBox="0 0 36 36">
-                    <circle class="text-gray-200" stroke-width="4" stroke="currentColor" fill="none" cx="18" cy="18" r="16" />
-                    <circle class="text-blue-500" stroke-width="4" stroke-linecap="round" stroke="currentColor" fill="none" cx="18" cy="18" r="16"
-                      stroke-dasharray="100, 100" stroke-dashoffset="{{ profile.progress_offset }}" style="transition: stroke-dashoffset 0.5s;" />
-                  </svg>
-                  <span class="absolute inset-0 flex items-center justify-center text-lg font-bold text-blue-700">{{ profile.progress|default:0 }}%</span>
-                </div>
-              </div>
-              <div class="flex flex-col sm:flex-row mt-2 sm:mt-0 space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto justify-center">
-                {% if user.is_authenticated %}
-                  {% if profile.user != user %}
-                    {% if user.employeeprofile.role == 'head' or user.employeeprofile.role == 'manager' or user.employeeprofile.role == 'admin' %}
-                      <a href="{% url 'edit-profile' profile.user.id %}" class="text-blue-600 underline">Edit</a>
-                      <a href="{% url 'assign-task' %}?to={{ profile.id }}" class="text-green-600 underline">Assign Task</a>
-                    {% endif %}
-                  {% endif %}
-                {% endif %}
-                {% if profile.user == user %}
-                  <a href="{% url 'my-profile' %}" class="text-blue-600 underline ml-0 sm:ml-4">View My Profile</a>
-                {% endif %}
-              </div>
-            </li>
-          {% endif %}
-        {% endfor %}
-      </ul>
-    </div>
-
-    <div id="tab-head" style="display:none;">
-      <h2 class="text-xl font-bold mt-6">Heads</h2>
-      <ul class="space-y-4">
-        {% for profile in profiles %}
-          {% if profile.role == 'head' %}
-            <li class="glass bg-white/40 rounded shadow p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-              <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 w-full">
-                <span class="font-semibold text-lg">{{ profile.user.username }}</span>
-                <span class="text-gray-500">- {{ profile.role }}</span>
-              </div>
-              <div class="flex justify-center items-center w-full sm:w-auto mt-2 sm:mt-0">
-                <div class="relative w-16 h-16">
-                  <svg class="w-16 h-16" viewBox="0 0 36 36">
-                    <circle class="text-gray-200" stroke-width="4" stroke="currentColor" fill="none" cx="18" cy="18" r="16" />
-                    <circle class="text-blue-500" stroke-width="4" stroke-linecap="round" stroke="currentColor" fill="none" cx="18" cy="18" r="16"
-                      stroke-dasharray="100, 100" stroke-dashoffset="{{ profile.progress_offset }}" style="transition: stroke-dashoffset 0.5s;" />
-                  </svg>
-                  <span class="absolute inset-0 flex items-center justify-center text-lg font-bold text-blue-700">{{ profile.progress|default:0 }}%</span>
-                </div>
-              </div>
-              <div class="flex flex-col sm:flex-row mt-2 sm:mt-0 space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto justify-center">
-                {% if user.is_authenticated %}
-                  {% if profile.user != user %}
-                    {% if user.employeeprofile.role == 'head' or user.employeeprofile.role == 'admin' %}
-                      <a href="{% url 'edit-profile' profile.user.id %}" class="text-blue-600 underline">Edit</a>
-                      <a href="{% url 'assign-task' %}?to={{ profile.id }}" class="text-green-600 underline">Assign Task</a>
-                    {% endif %}
-                  {% endif %}
-                {% endif %}
-                {% if profile.user == user %}
-                  <a href="{% url 'my-profile' %}" class="text-blue-600 underline ml-0 sm:ml-4">View My Profile</a>
-                {% endif %}
-              </div>
-            </li>
-          {% endif %}
-        {% endfor %}
-      </ul>
+  <!-- Bottom Sheet (no dark overlay; the page stays visible & unchanged) -->
+  <div id="tasksSheet"
+       class="fixed inset-x-0 bottom-0 translate-y-full transition-transform duration-300 ease-out z-50">
+    <div class="mx-auto max-w-lg w-full p-4">
+      <div class="glass bg-white/90 rounded-2xl shadow-xl overflow-hidden">
+        <!-- Grab handle + header -->
+        <div class="p-3 border-b border-gray-200">
+          <div class="mx-auto h-1.5 w-12 rounded-full bg-gray-300 mb-3"></div>
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-bold">My Tasks</h2>
+            <button type="button" onclick="closeTasksSheet()" class="text-gray-600 hover:text-black text-xl leading-none">✖</button>
+          </div>
+        </div>
+        <!-- Content -->
+        <div id="tasksContent" class="p-4 space-y-2 text-gray-700 min-h-[120px]"></div>
+      </div>
     </div>
   </div>
+
   <script>
-    function showTab(tab) {
-      document.getElementById('tab-all').style.display = 'none';
-      document.getElementById('tab-employee').style.display = 'none';
-      document.getElementById('tab-manager').style.display = 'none';
-      document.getElementById('tab-head').style.display = 'none';
-      document.getElementById('tab-' + tab).style.display = 'block';
-      localStorage.setItem('lastTab', tab);
+    /* ---------- Tabs that filter a single list ---------- */
+    function applyFilter(role) {
+      const cards = document.querySelectorAll('#people-list .person-card');
+      cards.forEach(card => {
+        const r = card.getAttribute('data-role');
+        if (role === 'all' || r === role) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
     }
-    // Show last selected tab or 'All' by default
-    const lastTab = localStorage.getItem('lastTab') || 'all';
-    showTab(lastTab);
-    // Add click listeners to tab links to save tab
-    document.querySelectorAll('a[href^="#"]').forEach(link => {
-      link.addEventListener('click', function(e) {
-        const tab = this.getAttribute('href').replace('#', '');
+
+    function activateTab(tab) {
+      document.querySelectorAll('#tabs .tab-link').forEach(a => {
+        a.classList.remove('border-b-0', 'text-blue-700');
+      });
+      const link = document.querySelector(`#tabs .tab-link[data-tab="${tab}"]`);
+      if (link) {
+        link.classList.add('border-b-0', 'text-blue-700');
+      }
+    }
+
+    function showTab(tab) {
+      localStorage.setItem('lastTab', tab);
+      activateTab(tab);
+      applyFilter(tab);
+    }
+
+    // Init tabs
+    document.querySelectorAll('#tabs .tab-link').forEach(a => {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        const tab = this.getAttribute('data-tab');
         showTab(tab);
       });
     });
+    const lastTab = localStorage.getItem('lastTab') || 'all';
+    showTab(lastTab);
+
+    /* ---------- Bottom Sheet for tasks ---------- */
+    const sheet = document.getElementById('tasksSheet');
+    const content = document.getElementById('tasksContent');
+
+    async function openTasksSheet(userId) {
+      content.innerHTML = '<p>Loading...</p>';
+      sheet.classList.remove('translate-y-full');
+
+      try {
+        const res = await fetch(`/tasks/${userId}/json/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+        const data = await res.json();
+
+        if (!data.tasks || data.tasks.length === 0) {
+          content.innerHTML = '<p class="text-green-600 font-semibold">You are doing great!</p>';
+          return;
+        }
+
+        content.innerHTML = data.tasks.map(t => `
+          <div class="p-3 border rounded-lg">
+            <p class="font-semibold">${t.title}</p>
+            <p class="text-sm">Status: ${t.status} &nbsp;|&nbsp; Progress: ${t.progress}%</p>
+            <p class="text-xs text-gray-500">By: ${t.assigned_by} on ${t.created_at}</p>
+          </div>
+        `).join('');
+      } catch (err) {
+        content.innerHTML = '<p class="text-red-600">Failed to load tasks.</p>';
+      }
+    }
+
+    function closeTasksSheet() {
+      sheet.classList.add('translate-y-full');
+    }
   </script>
 {% endblock %}

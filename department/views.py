@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout
+from django.http import JsonResponse
 
 from .models import EmployeeProfile, Task
 
@@ -19,15 +20,6 @@ def employee_list(request):
 @login_required
 def my_profile(request):
     profile, _ = EmployeeProfile.objects.get_or_create(user=request.user)
-    if request.method == 'POST':
-        try:
-            new_prog = int(request.POST.get('progress', profile.progress))
-        except ValueError:
-            new_prog = profile.progress
-        profile.progress = min(new_prog, 100)
-        profile.save()
-        messages.success(request, "Your progress has been updated.")
-        return redirect('my-profile')
     return render(request, 'profile.html', {'profile': profile})
 
 
@@ -52,22 +44,21 @@ def assign_task(request):
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
-        to_id = request.POST.get('assigned_to')
+        to_ids_str = request.POST.get('assigned_to', '')
+        to_ids = [i for i in to_ids_str.split(',') if i.strip().isdigit()]
 
-        if title and to_id:
-            try:
-                assignee = EmployeeProfile.objects.get(id=to_id)
+        if title and to_ids:
+            employees = EmployeeProfile.objects.filter(id__in=to_ids)
+            for emp in employees:
                 Task.objects.create(
                     title=title,
                     description=description,
-                    assigned_to=assignee,
+                    assigned_to=emp,
                     assigned_by=assigner
                 )
-                messages.success(request, "Task assigned successfully.")
-            except EmployeeProfile.DoesNotExist:
-                messages.error(request, "Selected employee does not exist.")
+            messages.success(request, f"Task assigned to {employees.count()} employee(s).")
         else:
-            messages.error(request, "Title and assignee are required.")
+            messages.error(request, "Title and at least one assignee are required.")
 
         return redirect('assign-task')
 
@@ -84,8 +75,6 @@ def edit_profile(request, user_id):
         can_edit = True
     elif current_profile.role == 'manager' and target_profile.role == 'employee':
         can_edit = True
-    elif current_profile.user == target_profile.user:
-        can_edit = True
 
     if not can_edit:
         messages.error(request, "Permission denied.")
@@ -101,7 +90,7 @@ def edit_profile(request, user_id):
         messages.success(request, "Profile updated.")
         return redirect('employee-list')
 
-    return render(request, 'profile.html', {'profile': target_profile, 'editing_other': current_profile != target_profile})
+    return render(request, 'profile.html', {'profile': target_profile, 'editing_other': True})
 
 
 @login_required
@@ -124,3 +113,23 @@ def report_task(request, task_id):
         return redirect('my-profile')
 
     return render(request, 'report_task.html', {'task': task})
+
+
+@login_required
+def get_user_tasks(request, user_id):
+    profile = get_object_or_404(EmployeeProfile, id=user_id)
+    if request.user != profile.user and request.user.employeeprofile.role not in ("head", "manager", "admin"):
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    tasks = Task.objects.filter(assigned_to=profile).select_related("assigned_by")
+    task_list = [
+        {
+            "title": task.title,
+            "status": task.status,
+            "progress": task.progress,
+            "assigned_by": task.assigned_by.user.username if task.assigned_by else "N/A",
+            "created_at": task.created_at.strftime("%Y-%m-%d %H:%M")
+        }
+        for task in tasks
+    ]
+    return JsonResponse({"tasks": task_list})
